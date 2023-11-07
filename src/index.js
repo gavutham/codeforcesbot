@@ -1,4 +1,5 @@
 const { Client, IntentsBitField, EmbedBuilder } = require("discord.js");
+const { getContests } = require("./codeforces");
 require("dotenv").config();
 
 const client = new Client({
@@ -12,6 +13,6 @@ const client = new Client({
 
 client.login(process.env.BOT_KEY);
 
-client.on("ready", (c) => {
+client.on("ready", async (c) => {
   console.log(`This is ${c.user.username}, On your command...`);
 });
