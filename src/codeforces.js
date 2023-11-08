@@ -1,24 +1,30 @@
 const { EmbedBuilder } = require("discord.js");
+const { secondsToHMS, isSameDay } = require("../utils/time");
 
-const secondsToHMS = (seconds) => {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const remainingSeconds = seconds % 60;
-
-  const h = String(hours).padStart(2, "0");
-  const m = String(minutes).padStart(2, "0");
-  const s = String(remainingSeconds).padStart(2, "0");
-
-  return `${h}:${m}:${s}`;
-};
-
-const getContests = async () => {
+const getUpcomingContests = async () => {
   try {
     const res = await fetch("https://codeforces.com/api/contest.list");
 
     if (res.status === 200) {
       const contests = (await res.json()).result;
       return contests.filter((ele) => ele.phase === "BEFORE");
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const getTodayContests = async () => {
+  try {
+    const res = await fetch("https://codeforces.com/api/contest.list");
+
+    if (res.status === 200) {
+      const contests = (await res.json()).result;
+      return contests.filter(
+        (contest) =>
+          contest.phase === "BEFORE" &&
+          isSameDay(contest.startTimeSeconds * 1000)
+      );
     }
   } catch (error) {
     console.log(error);
@@ -49,4 +55,4 @@ const createEmbed = (contest) => {
   return embed;
 };
 
-module.exports = { getContests, createEmbed };
+module.exports = { getUpcomingContests, getTodayContests, createEmbed };

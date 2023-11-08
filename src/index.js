@@ -1,12 +1,18 @@
+require("dotenv").config();
 const {
   Client,
   IntentsBitField,
   ButtonBuilder,
   ButtonStyle,
   ActionRowBuilder,
+  EmbedBuilder,
 } = require("discord.js");
-const { getContests, createEmbed } = require("./codeforces");
-require("dotenv").config();
+const {
+  getUpcomingContests,
+  createEmbed,
+  getTodayContests,
+} = require("./codeforces");
+const cron = require("node-cron");
 
 const client = new Client({
   intents: [
@@ -28,7 +34,7 @@ client.on("interactionCreate", async (interaction) => {
   interaction.deferReply({ ephemeral: true });
 
   if (interaction.commandName === "upcoming") {
-    const contests = await getContests();
+    const contests = await getUpcomingContests();
     const embeds = contests.map((c) => createEmbed(c));
     const register = new ButtonBuilder()
       .setLabel("Register for Contests")
@@ -39,4 +45,28 @@ client.on("interactionCreate", async (interaction) => {
 
     interaction.editReply({ embeds: embeds, components: [row] });
   }
+});
+
+cron.schedule("45 16 * * *", async () => {
+  const channel = client.channels.cache.get(process.env.CONTEST_ALERT_ID);
+  if (!channel) return;
+
+  const contests = await getTodayContests();
+
+  if (contests.length === 0) return;
+
+  const embeds = contests.map((c) => createEmbed(c));
+  const register = new ButtonBuilder()
+    .setLabel("Go to Contests Page")
+    .setStyle(ButtonStyle.Link)
+    .setURL("https://codeforces.com/contests");
+
+  const row = new ActionRowBuilder().addComponents(register);
+
+  channel.send({
+    content:
+      "Checkout the contests in Codeforces that are happening TODAY !!\n",
+    embeds: embeds,
+    components: [row],
+  });
 });
