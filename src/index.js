@@ -1,5 +1,11 @@
-const { Client, IntentsBitField, EmbedBuilder } = require("discord.js");
-const { getContests } = require("./codeforces");
+const {
+  Client,
+  IntentsBitField,
+  ButtonBuilder,
+  ButtonStyle,
+  ActionRowBuilder,
+} = require("discord.js");
+const { getContests, createEmbed } = require("./codeforces");
 require("dotenv").config();
 
 const client = new Client({
@@ -19,17 +25,18 @@ client.on("ready", async (c) => {
 
 client.on("interactionCreate", async (interaction) => {
   if (!interaction.isCommand()) return;
-  await interaction.deferReply({ ephemeral: true });
+  interaction.deferReply({ ephemeral: true });
 
   if (interaction.commandName === "upcoming") {
     const contests = await getContests();
-    let reply = "";
+    const embeds = contests.map((c) => createEmbed(c));
+    const register = new ButtonBuilder()
+      .setLabel("Register for Contests")
+      .setStyle(ButtonStyle.Link)
+      .setURL("https://codeforces.com/contests");
 
-    contests.forEach((c) => {
-      reply += ", ";
-      reply += c.name;
-    });
+    const row = new ActionRowBuilder().addComponents(register);
 
-    interaction.editReply({ content: reply });
+    interaction.editReply({ embeds: embeds, components: [row] });
   }
 });
